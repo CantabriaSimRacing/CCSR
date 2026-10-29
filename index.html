@@ -209,14 +209,15 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
 <dialog id="dlg"><div class="dbox"><h3 id="dt">Acceder</h3>
 <label class="su" style="display:none">Nombre y apellidos<input id="ln" autocomplete="name" maxlength="120"></label>
 <label>Correo<input id="le" type="email" autocomplete="username"></label>
-<label>Contraseña<input id="lp" type="password" autocomplete="current-password" minlength="6"></label>
+<label id="lpw">Contraseña<input id="lp" type="password" autocomplete="current-password" minlength="6"></label>
 <label class="su" style="display:none">Año de nacimiento<input id="ly" type="number" inputmode="numeric" min="1900" max="2100" autocomplete="bday-year" placeholder="Ej. 1995"></label>
 <label class="su chk" style="display:none"><input type="checkbox" id="lc"><span>He leído y acepto la <a href="#privacidad" target="_blank" rel="noopener">política de privacidad</a> y el tratamiento de mis datos para gestionar mi cuenta en la liga.</span></label>
 <label class="chk" id="lmw" style="display:none"><input type="checkbox" id="lm"><span>Soy menor de 14 años y cuento con la autorización de mi madre, padre o tutor legal.</span></label>
+<label id="lcw" style="display:none">Código de verificación<input id="lk" inputmode="numeric" autocomplete="one-time-code" maxlength="10" placeholder="123456"></label>
 <p id="lh" style="margin:0;font-size:.85rem;color:var(--muted)"></p>
 <p id="lerr" role="alert" style="margin:0;color:var(--accent);font-weight:600"></p>
-<div style="display:flex;gap:8px"><button class="btn" id="lgo" type="button">Entrar</button><button class="btn line" id="lcl" type="button">Cancelar</button></div>
-<p style="margin:0;font-size:.9rem;color:var(--muted)"><span id="lq">¿No tienes cuenta?</span> <button type="button" id="lsw" style="background:none;border:0;padding:0;color:var(--accent);font:inherit;font-weight:700;cursor:pointer;text-decoration:underline">Regístrate</button></p></div></dialog>
+<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="lgo" type="button">Entrar</button><button class="btn line" id="lcl" type="button">Cancelar</button><button class="btn line" id="lrs" type="button" style="display:none">Reenviar código</button></div>
+<p id="lsr" style="margin:0;font-size:.9rem;color:var(--muted)"><span id="lq">¿No tienes cuenta?</span> <button type="button" id="lsw" style="background:none;border:0;padding:0;color:var(--accent);font:inherit;font-weight:700;cursor:pointer;text-decoration:underline">Regístrate</button></p></div></dialog>
 
 <footer><div class="wrap"><span>© 2027 Cantabria Sim Racing</span><span><a href="#privacidad">Privacidad</a> · Discord · YouTube · Instagram</span></div></footer>
 
@@ -275,14 +276,21 @@ document.getElementById("rules").addEventListener("click",function(e){var d=e.ta
 renderRules();
 if(sb){
 var lb=document.getElementById("login-btn"),dlg=document.getElementById("dlg");lb.hidden=false;
-var signup=false;
-function setMode(m){signup=m;var g=function(i){return document.getElementById(i)};g("dt").textContent=m?"Crear cuenta":"Acceder";g("lgo").textContent=m?"Crear cuenta":"Entrar";g("lq").textContent=m?"¿Ya tienes cuenta?":"¿No tienes cuenta?";g("lsw").textContent=m?"Entra":"Regístrate";g("le").autocomplete="username";g("lp").autocomplete=m?"new-password":"current-password";g("lh").textContent=m?"Contraseña de al menos 6 caracteres. La edición de reglamentos solo está disponible para organizadores.":"";g("lerr").textContent="";g("lerr").style.color="var(--accent)";document.querySelectorAll(".su").forEach(function(e){e.style.display=m?"grid":"none"});document.getElementById("lmw").style.display="none"}
+var signup=false,verifying=false;
+function setMode(m){signup=m;var g=function(i){return document.getElementById(i)};g("dt").textContent=m?"Crear cuenta":"Acceder";g("lgo").textContent=m?"Crear cuenta":"Entrar";g("lq").textContent=m?"¿Ya tienes cuenta?":"¿No tienes cuenta?";g("lsw").textContent=m?"Entra":"Regístrate";g("le").autocomplete="username";g("lp").autocomplete=m?"new-password":"current-password";g("lh").textContent=m?"Contraseña de al menos 6 caracteres. La edición de reglamentos solo está disponible para organizadores.":"";g("lerr").textContent="";g("lerr").style.color="var(--accent)";document.querySelectorAll(".su").forEach(function(e){e.style.display=m?"grid":"none"});document.getElementById("lmw").style.display="none";verifying=false;document.getElementById("lpw").style.display="grid";document.getElementById("lcw").style.display="none";document.getElementById("lrs").style.display="none";document.getElementById("lsr").style.display=""}
+function setVerify(email){var g=function(i){return document.getElementById(i)};verifying=true;g("dt").textContent="Verifica tu correo";g("lh").textContent="Te hemos enviado un código a "+email+". Escríbelo aquí (revisa también el spam).";g("lerr").textContent="";g("lerr").style.color="var(--accent)";document.querySelectorAll(".su").forEach(function(e){e.style.display="none"});g("lmw").style.display="none";g("lpw").style.display="none";g("lcw").style.display="grid";g("lrs").style.display="";g("lsr").style.display="none";g("lgo").textContent="Verificar";g("lk").value="";g("lk").focus()}
+document.getElementById("lrs").addEventListener("click",async function(){var er=document.getElementById("lerr"),r=await sb.auth.resend({type:"signup",email:document.getElementById("le").value.trim()});if(r.error){er.style.color="var(--accent)";er.textContent="No se pudo reenviar: "+r.error.message}else{er.style.color="var(--text)";er.textContent="Te hemos enviado un nuevo código."}});
 document.getElementById("ly").addEventListener("input",function(){var y=parseInt(this.value,10);document.getElementById("lmw").style.display=(signup&&y>=1900&&new Date().getFullYear()-y<=14)?"grid":"none"});
 lb.addEventListener("click",async function(){if(user){await sb.auth.signOut();refresh()}else{setMode(false);dlg.showModal()}});
 document.getElementById("lcl").addEventListener("click",function(){dlg.close()});
 document.getElementById("lsw").addEventListener("click",function(){setMode(!signup)});
 document.getElementById("lgo").addEventListener("click",async function(){
 var em=document.getElementById("le").value.trim(),pw=document.getElementById("lp").value,er=document.getElementById("lerr");er.textContent="";er.style.color="var(--accent)";
+if(verifying){var code=document.getElementById("lk").value.trim();
+if(!/^[0-9]{6,10}$/.test(code)){er.textContent="Escribe el código numérico que te hemos enviado.";return}
+var rv=await sb.auth.verifyOtp({email:em,token:code,type:"signup"});
+if(rv.error){er.textContent="Código incorrecto o caducado. Puedes pedir uno nuevo."}else{dlg.close();document.getElementById("lp").value="";setMode(false);refresh()}
+return}
 var nm=document.getElementById("ln").value.trim().replace(/\s+/g," "),yr=parseInt(document.getElementById("ly").value,10);
 if(signup&&nm.split(" ").length<2){er.textContent="Escribe tu nombre y apellidos.";return}
 if(!em||pw.length<6){er.textContent="Escribe tu correo y una contraseña de al menos 6 caracteres.";return}
@@ -294,9 +302,9 @@ if(signup){var r=await sb.auth.signUp({email:em,password:pw,options:{data:{full_
 if(r.error){var m=r.error.message||"";er.textContent=/already registered/i.test(m)?"Este correo ya está registrado. Pulsa «Entra» para iniciar sesión.":/database error/i.test(m)?"No se pudo crear la cuenta por un error del servidor. Avisa a la organización.":"No se pudo crear la cuenta: "+m;return}
 if(r.data&&r.data.user&&r.data.user.identities&&r.data.user.identities.length===0){er.textContent="Este correo ya está registrado. Pulsa «Entra» para iniciar sesión.";return}
 if(r.data&&r.data.session){dlg.close();document.getElementById("lp").value="";refresh()}
-else{setMode(false);er.style.color="var(--text)";er.textContent="Cuenta creada. Revisa tu correo para confirmarla y después entra."}
+else{setVerify(em)}
 }else{var r2=await sb.auth.signInWithPassword({email:em,password:pw});
-if(r2.error){er.textContent=/not confirmed/i.test(r2.error.message||"")?"Debes confirmar tu correo antes de entrar. Revisa tu bandeja de entrada y la de spam.":"Correo o contraseña incorrectos."}else{dlg.close();document.getElementById("lp").value="";refresh()}}});
+if(r2.error){if(/not confirmed/i.test(r2.error.message||"")){await sb.auth.resend({type:"signup",email:em});setVerify(em)}else{er.textContent="Correo o contraseña incorrectos."}}else{dlg.close();document.getElementById("lp").value="";refresh()}}});
 loadRules();refresh();
 }
 var views=["inicio","calendario","clasificacion","reglamento","inscripcion","privacidad"];
