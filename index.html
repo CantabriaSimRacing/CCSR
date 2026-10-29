@@ -291,11 +291,12 @@ var mn=signup&&(new Date().getFullYear()-yr)<=14;
 if(signup&&!document.getElementById("lc").checked){er.textContent="Debes aceptar la política de privacidad para crear la cuenta.";return}
 if(mn&&!document.getElementById("lm").checked){er.textContent="Si eres menor de 14 años necesitas la autorización de tu madre, padre o tutor.";return}
 if(signup){var r=await sb.auth.signUp({email:em,password:pw,options:{data:{full_name:nm,birth_year:yr,consent:true,minor_authorized:mn}}});
-if(r.error){er.textContent="No se pudo crear la cuenta: "+r.error.message;return}
+if(r.error){var m=r.error.message||"";er.textContent=/already registered/i.test(m)?"Este correo ya está registrado. Pulsa «Entra» para iniciar sesión.":/database error/i.test(m)?"No se pudo crear la cuenta por un error del servidor. Avisa a la organización.":"No se pudo crear la cuenta: "+m;return}
+if(r.data&&r.data.user&&r.data.user.identities&&r.data.user.identities.length===0){er.textContent="Este correo ya está registrado. Pulsa «Entra» para iniciar sesión.";return}
 if(r.data&&r.data.session){dlg.close();document.getElementById("lp").value="";refresh()}
 else{setMode(false);er.style.color="var(--text)";er.textContent="Cuenta creada. Revisa tu correo para confirmarla y después entra."}
 }else{var r2=await sb.auth.signInWithPassword({email:em,password:pw});
-if(r2.error){er.textContent="Correo o contraseña incorrectos."}else{dlg.close();document.getElementById("lp").value="";refresh()}}});
+if(r2.error){er.textContent=/not confirmed/i.test(r2.error.message||"")?"Debes confirmar tu correo antes de entrar. Revisa tu bandeja de entrada y la de spam.":"Correo o contraseña incorrectos."}else{dlg.close();document.getElementById("lp").value="";refresh()}}});
 loadRules();refresh();
 }
 var views=["inicio","calendario","clasificacion","reglamento","inscripcion","privacidad"];
