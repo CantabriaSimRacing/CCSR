@@ -75,17 +75,12 @@ th:last-child,td.pts{text-align:right}
 .band .btn{background:#fff;color:#b30009}.band p{opacity:.9;margin:8px auto 24px;max-width:520px}
 .rbtns{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:24px}.rbtn{flex:1 1 200px;font:inherit;font-weight:700;font-size:1.05rem;padding:16px 20px;border-radius:8px;cursor:pointer;background:var(--bg);color:var(--accent);border:2px solid var(--accent)}.rbtn[aria-selected="true"]{background:var(--accent);color:var(--accent-text)}.rbtn:focus-visible{outline:2px solid var(--text);outline-offset:2px}
 label.chk{grid-template-columns:auto 1fr;align-items:start;gap:10px;font-weight:400;font-size:.88rem}.chk input{margin-top:3px}.legal{max-width:760px;padding-bottom:64px}.legal h3{margin:26px 0 6px;font-size:1.3rem}.legal p{margin:0 0 8px;color:var(--muted)}footer a{opacity:.9}
+.doc{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:32px 36px;max-width:920px}.dhead{border-bottom:1px solid var(--line);margin-bottom:8px;padding-bottom:14px}.dhead h2{font-size:2rem;margin:0}.dhead p{margin:4px 0 0;color:var(--muted);font-size:.85rem}h3.ds{font-size:1.2rem;margin:28px 0 12px;letter-spacing:.03em}.dc{margin:0 0 12px;font-size:.95rem;line-height:1.65}.d2{margin-left:28px}.hint{font-size:.88rem;color:var(--muted);margin:0 0 10px}#dedit{width:100%;font-family:ui-monospace,Consolas,monospace;font-size:.88rem;line-height:1.5}h3.pv{margin:24px 0 10px}
+@media (max-width:640px){.doc{padding:22px 18px}.d2{margin-left:16px}}
+@media print{header,footer,body::before,.page-head,.rbtns,.rbar,#rmsg,dialog,.view{display:none!important}#v-reglamento{display:block!important}body{background:#fff}.doc{border:0;padding:0;background:#fff;max-width:none}.doc *{color:#000!important}}
+.av{width:38px;height:38px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:var(--accent);color:#fff;font-weight:800;font-size:.9rem;text-decoration:none;border:2px solid #ffffff55;flex:none}.av img,.avbig img{width:100%;height:100%;object-fit:cover}[hidden]{display:none!important}
+.pcard{display:flex;gap:36px;flex-wrap:wrap}.pcol{display:grid;gap:12px;justify-items:center;align-content:start}.avbig{width:140px;height:140px;border-radius:50%;overflow:hidden;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:2.6rem;font-weight:800}.pform{display:grid;gap:14px;flex:1 1 280px;max-width:460px}.badge{justify-self:start;background:var(--accent);color:var(--accent-text);font-size:.78rem;font-weight:700;padding:4px 12px;border-radius:99px}
 dialog{border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--text);padding:24px;width:min(400px,92vw);max-height:92vh;overflow:auto}dialog::backdrop{background:#000a}.dbox{display:grid;gap:14px}.rbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.btn.line{background:transparent;color:var(--accent);border:2px solid var(--accent)}.card input,.card textarea{width:100%;margin-bottom:8px}textarea{font:inherit;padding:11px 12px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--text);resize:vertical}
-.doc{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:32px clamp(18px,4vw,36px) 12px;margin-bottom:64px}
-.doc h3{font-family:inherit;font-size:1.3rem;font-weight:600;letter-spacing:.01em;line-height:1.3;margin:0 0 18px}
-.doc section.sec{padding:0;margin:0 0 36px;background:none;border:0}
-.doc p{margin:0 0 14px;color:var(--text);font-size:.92rem;line-height:1.65;padding-left:clamp(0px,3vw,28px)}
-.doc p.l2{padding-left:clamp(14px,6vw,56px)}
-.doc p.bl{padding-left:clamp(14px,6vw,56px)}
-.doc .card p{padding-left:0}
-.doc.editing{background:none;border:0;padding:0}
-.doc .card{margin-bottom:12px}
-.doc .hint{color:var(--muted);font-size:.88rem;padding-left:0}
 form{display:grid;gap:14px;max-width:560px;margin-bottom:64px}
 label{font-size:.85rem;font-weight:600;display:grid;gap:6px}
 input,select{font:inherit;padding:11px 12px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--text)}
@@ -105,7 +100,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
 <li><a href="#clasificacion" data-v="clasificacion">Clasificación</a></li>
 <li><a href="#reglamento" data-v="reglamento">Reglamento</a></li>
 </ul>
-<div style="display:flex;gap:8px;align-items:center"><button class="btn sm ghost" id="login-btn" type="button" hidden>Acceder</button><a class="btn sm" href="#inscripcion">Inscríbete</a></div>
+<div style="display:flex;gap:8px;align-items:center"><button class="btn sm ghost" id="login-btn" type="button" hidden>Acceder</button><a class="btn sm" href="#inscripcion">Inscríbete</a><a class="av" id="avatar" href="#perfil" aria-label="Mi perfil" hidden></a></div>
 </nav></div></header>
 
 <main>
@@ -182,14 +177,14 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
 
 <!-- REGLAMENTO -->
 <div class="view" id="v-reglamento"><div class="wrap">
-<div class="page-head"><h2>Reglamento</h2><p class="lead">Elige el campeonato para ver su reglamento. El documento completo se entrega al confirmar la inscripción.</p></div>
+<div class="page-head"><h2>Reglamento</h2><p class="lead">Elige el campeonato para consultar su reglamento completo.</p></div>
 <div class="rbtns" role="tablist">
 <button class="rbtn" role="tab" aria-selected="true" data-r="ra">Reglamento Rally</button>
 <button class="rbtn" role="tab" aria-selected="false" data-r="rs">Reglamento Rallysprint</button>
 <button class="rbtn" role="tab" aria-selected="false" data-r="mo">Reglamento Montaña</button>
 </div>
 <div id="rbar" class="rbar"></div><p id="rmsg" class="lead" role="status" style="margin:0 0 16px"></p>
-<div class="doc" id="rules"></div>
+<div id="rules" style="padding-bottom:64px"></div>
 </div></div>
 
 <!-- INSCRIPCIÓN -->
@@ -214,6 +209,10 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
 <h3>Conservación</h3><p>Mientras mantengas tu cuenta o hasta que solicites su eliminación, y después durante los plazos legales que correspondan.</p>
 <h3>Destinatarios</h3><p>No cedemos tus datos a terceros salvo obligación legal. Usamos Supabase como proveedor de infraestructura (encargado del tratamiento). [COMPLETAR SI HAY OTROS].</p>
 <h3>Tus derechos</h3><p>Puedes solicitar el acceso, la rectificación, la supresión, la oposición, la limitación y la portabilidad de tus datos escribiendo a [CORREO DE CONTACTO]. También puedes reclamar ante la Agencia Española de Protección de Datos (aepd.es).</p>
+</div></div>
+<div class="view" id="v-perfil"><div class="wrap">
+<div class="page-head"><h2>Mi perfil</h2></div>
+<div id="pf" style="padding-bottom:64px"></div>
 </div></div>
 </main>
 <dialog id="dlg"><div class="dbox"><h3 id="dt">Acceder</h3>
@@ -248,46 +247,84 @@ document.getElementById("rounds-home").innerHTML=rr(3);
 document.getElementById("rounds-all").innerHTML=rr(6);
 document.getElementById("tb").innerHTML=rows("rs",5);
 document.querySelectorAll(".tab").forEach(function(b){b.addEventListener("click",function(){document.querySelectorAll(".tab").forEach(function(x){x.setAttribute("aria-selected","false")});b.setAttribute("aria-selected","true");document.getElementById("tb").innerHTML=rows(b.dataset.c,5)})});
-var rules={
-ra:[["Puntuación","25, 18, 15, 12, 10, 8, 6, 4, 2 y 1 puntos por rally."],["Etapas","Varias etapas especiales por rally y un solo intento válido por etapa."],["Coches","Coches homologados por categoría y copa."],["Reclamaciones","Repeticiones obligatorias en caso de reclamación; comisarios independientes."]],
-rs:[["Puntuación","Puntuación por prueba según la clasificación final de cada rallysprint."],["Formato","Tramos más cortos, pensados para competir en una sola sesión."],["Coches","Coches homologados por categoría y copa."],["Juego limpio","Sanciones públicas y razonadas; trato respetuoso en todos los canales."]],
-mo:[["Puntuación","Puntos por subida según el mejor tiempo de las mangas."],["Formato","Subidas cronometradas con varias mangas por prueba."],["Coches","Coches homologados por categoría y copa."],["Reclamaciones","Repeticiones obligatorias en caso de reclamación; comisarios independientes."]]};
-var sb=null,user=null,roles={},cur="ra",editing=false,draft=[];
+var BASE="# BASES\nLa normativa vigente es de obligado cumplimiento por parte de todos los pilotos inscritos; el desconocimiento de la misma no exime de la sanción por su incumplimiento.\nToda la normativa puede ser modificada, parcial o totalmente, si la organización lo considera necesario para garantizar el buen funcionamiento de la competición. La modificación será notificada a los participantes.\nCSR se reserva el derecho de admisión.\nCSR se reserva el derecho de posponer, alterar o cancelar el evento o parte del mismo.\n> En caso de cancelación, se informará a los participantes de las condiciones aplicables.\nCSR realiza su actividad conforme al huso horario de Madrid.\n";
+var TAIL="# COCHES\nSolo se permiten coches homologados para su categoría y copa.\nLos reglajes son libres, sin modificaciones de archivos.\n# RECLAMACIONES\nLas reclamaciones deberán presentarse a la organización dentro del plazo establecido.\n> Las repeticiones serán obligatorias si la organización las solicita.\nLas decisiones las toman comisarios independientes.\n# COMUNICACIÓN\nLas comunicaciones oficiales se publicarán en la web y en los canales oficiales de CSR.\n";
+var docs={
+ra:BASE+"# FORMATO\nCada rally consta de varias etapas especiales.\nSolo es válido un intento por etapa.\n# PUNTUACIÓN\nPuntúan los diez primeros de cada rally: 25, 18, 15, 12, 10, 8, 6, 4, 2 y 1 puntos.\n* La Gran Final puntúa doble.\n"+TAIL,
+rs:BASE+"# FORMATO\nLos rallysprints son pruebas de tramos más cortos, pensadas para competir en una sola sesión.\n# PUNTUACIÓN\nLa puntuación se asigna según la clasificación final de cada rallysprint.\n"+TAIL,
+mo:BASE+"# FORMATO\nLas pruebas de montaña son subidas cronometradas con varias mangas.\n# PUNTUACIÓN\nLos puntos se asignan según el mejor tiempo de las mangas de cada subida.\n"+TAIL};
+var dnames={ra:"Rally",rs:"Rallysprint",mo:"Montaña"},stamp={};
+var sb=null,user=null,roles={},cur="ra",editing=false,draft="";
 if(SUPABASE_URL&&SUPABASE_ANON_KEY&&window.supabase){sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY)}
 function esc(t){return String(t).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]})}
 function allowed(k){return !!(roles.all||roles[k])}
 function msg(t){document.getElementById("rmsg").textContent=t||""}
-function docSec(r,i){var n=0,t=String(r[1]).split("\n").map(function(l){return l.trim()}).filter(Boolean);
-return "<section class='sec'><h3>"+(i+1)+" - "+esc(r[0])+"</h3>"+t.map(function(l){var m=l.match(/^(\d+(?:\.\d+)*)\s*[-\u2013]\s*(.*)$/);
-if(m){return "<p class='"+(m[1].split(".").length>2?"l2":"")+"'>"+esc(m[1])+" - "+esc(m[2])+"</p>"}
-if(/^[\u2022\u00b7*]/.test(l)){return "<p class='bl'>\u2022 "+esc(l.replace(/^[\u2022\u00b7*]\s*/,""))+"</p>"}
-n++;return "<p>"+(i+1)+"."+n+" - "+esc(l)+"</p>"}).join("")+"</section>"}
+function parseDoc(t){var out=[],sec=0,cl=0,sub=0;
+String(t).split("\n").forEach(function(l){var x=l.trim();if(!x)return;
+if(x.indexOf("# ")===0){sec++;cl=0;sub=0;out.push("<h3 class='ds'>"+sec+" - "+esc(x.slice(2).toUpperCase())+"</h3>")}
+else if(x.indexOf("> ")===0){if(!sec)sec=1;sub++;out.push("<p class='dc d2'>"+sec+"."+cl+"."+sub+" - "+esc(x.slice(2))+"</p>")}
+else if(x.indexOf("* ")===0){out.push("<p class='dc d2'>• "+esc(x.slice(2))+"</p>")}
+else{if(!sec)sec=1;cl++;sub=0;out.push("<p class='dc'>"+sec+"."+cl+" - "+esc(x)+"</p>")}});
+return out.join("")}
 function renderRules(){
 var box=document.getElementById("rules"),bar=document.getElementById("rbar");
 if(editing){
-box.className="doc editing";box.innerHTML="<p class='hint'>Escribe cada punto en una línea distinta; se numeran solos. Puedes poner tú el número (p. ej. «1.6.1 - texto») o empezar con «•» para una viñeta.</p>"+draft.map(function(r,i){return "<div class='card'><input data-i='"+i+"' data-f='0' value=\""+esc(r[0])+"\" aria-label='Título'><textarea data-i='"+i+"' data-f='1' rows='5' aria-label='Texto'>"+esc(r[1])+"</textarea><button class='btn sm line' data-del='"+i+"' type='button'>Eliminar apartado</button></div>"}).join("");
-bar.innerHTML="<button class='btn sm line' id='b-add' type='button'>+ Añadir apartado</button><button class='btn sm' id='b-save' type='button'>Guardar cambios</button><button class='btn sm line' id='b-cancel' type='button'>Cancelar</button>";
+box.innerHTML="<div class='doc'><p class='hint'>Un apartado por línea. <b># Título</b> crea una sección; una línea normal es un apartado (se numera solo); <b>&gt; texto</b> es un subapartado y <b>* texto</b> una viñeta.</p><textarea id='dedit' rows='18' spellcheck='true' aria-label='Texto del reglamento'></textarea></div><h3 class='pv'>Vista previa</h3><div class='doc' id='dprev'></div>";
+document.getElementById("dedit").value=draft;document.getElementById("dprev").innerHTML=parseDoc(draft);
+bar.innerHTML="<button class='btn sm' id='b-save' type='button'>Guardar cambios</button><button class='btn sm line' id='b-cancel' type='button'>Cancelar</button>";
 }else{
-box.className="doc";box.innerHTML=rules[cur].map(docSec).join("");
-bar.innerHTML=allowed(cur)?"<button class='btn sm' id='b-edit' type='button'>Editar este reglamento</button>":"";
+box.innerHTML="<div class='doc'><div class='dhead'><h2>Reglamento "+dnames[cur]+"</h2>"+(stamp[cur]?"<p>Última actualización: "+esc(stamp[cur])+"</p>":"")+"</div>"+parseDoc(docs[cur])+"</div>";
+bar.innerHTML=(allowed(cur)?"<button class='btn sm' id='b-edit' type='button'>Editar este reglamento</button>":"")+"<button class='btn sm line' id='b-print' type='button'>Descargar PDF</button>";
 }}
-async function loadRules(){if(!sb)return;var r=await sb.from("rules").select("championship,content");
-(r.data||[]).forEach(function(x){if(rules[x.championship]&&Array.isArray(x.content)&&x.content.length){rules[x.championship]=x.content.map(function(y){return [String(y.title||""),String(y.text||"")]})}});renderRules()}
+async function loadRules(){if(!sb)return;var r=await sb.from("rules").select("championship,content,updated_at");
+(r.data||[]).forEach(function(x){var c=x.content;if(docs[x.championship]!==undefined&&c&&!Array.isArray(c)&&typeof c.doc==="string"&&c.doc.trim()){docs[x.championship]=c.doc;if(x.updated_at)stamp[x.championship]=new Date(x.updated_at).toLocaleDateString("es-ES")}});renderRules()}
 async function refresh(){roles={};var s=await sb.auth.getSession();user=s.data.session?s.data.session.user:null;
 if(user){var r=await sb.from("managers").select("championship");(r.data||[]).forEach(function(x){roles[x.championship]=true})}
-document.getElementById("login-btn").textContent=user?"Salir":"Acceder";editing=false;renderRules()}
-async function save(){var content=draft.filter(function(r){return r[0].trim()||r[1].trim()}).map(function(r){return {title:r[0].trim(),text:r[1].trim()}});
-var r=await sb.from("rules").upsert({championship:cur,content:content});
+await loadProfile();document.getElementById("login-btn").hidden=!!user;editing=false;renderRules();renderProfile()}
+async function save(){var r=await sb.from("rules").upsert({championship:cur,content:{doc:draft}});
 if(r.error){msg("No se pudo guardar: "+r.error.message);return}
-rules[cur]=content.map(function(y){return [y.title,y.text]});editing=false;msg("Reglamento guardado.");renderRules()}
+docs[cur]=draft;stamp[cur]=new Date().toLocaleDateString("es-ES");editing=false;msg("Reglamento guardado.");renderRules()}
+var profile=null,avatarUrl="";
+function initials(){var n=(profile&&profile.full_name)||(user&&user.email)||"?";var p=n.trim().split(/\s+/);return ((p[0]||"")[0]||"?").toUpperCase()+((p[1]||"")[0]||"").toUpperCase()}
+function avHTML(){return avatarUrl?"<img src=\""+esc(avatarUrl)+"\" alt=\"Foto de perfil\">":esc(initials())}
+function roleLabel(){if(roles.all)return "Administrador";var l=Object.keys(roles).map(function(k){return dnames[k]});return l.length?"Responsable · "+l.join(", "):"Piloto"}
+async function loadProfile(){profile=null;avatarUrl="";
+if(user){var r=await sb.from("profiles").select("full_name,birth_year,avatar_path").eq("id",user.id).maybeSingle();profile=r.data||{};
+if(profile.avatar_path){var u=await sb.storage.from("avatars").createSignedUrl(profile.avatar_path,3600);if(u.data)avatarUrl=u.data.signedUrl}}
+var a=document.getElementById("avatar");a.hidden=!user;a.innerHTML=avHTML()}
+function renderProfile(){var b=document.getElementById("pf");if(!b)return;
+if(!sb){b.innerHTML="<div class='doc'><p class='dc'>El perfil se activa al conectar la web con Supabase.</p></div>";return}
+if(!user){b.innerHTML="<div class='doc'><p class='dc'>Inicia sesión para ver tu perfil.</p><button class='btn sm' id='pf-login' type='button'>Acceder</button></div>";return}
+b.innerHTML="<div class='doc pcard'><div class='pcol'><div class='avbig'>"+avHTML()+"</div><label class='btn sm line' style='cursor:pointer'>Cambiar foto<input id='pf-file' type='file' accept='image/jpeg,image/png,image/webp' hidden></label></div>"+
+"<div class='pform'><span class='badge'>"+esc(roleLabel())+"</span>"+
+"<label>Nombre y apellidos<input id='pf-n' maxlength='120' value=\""+esc((profile&&profile.full_name)||"")+"\"></label>"+
+"<label>Correo<input value=\""+esc(user.email||"")+"\" disabled></label>"+
+"<label>Año de nacimiento<input id='pf-y' type='number' min='1900' max='2100' value=\""+esc((profile&&profile.birth_year)||"")+"\"></label>"+
+"<div style='display:flex;gap:8px;flex-wrap:wrap'><button class='btn sm' id='pf-save' type='button'>Guardar</button><button class='btn sm line' id='pf-out' type='button'>Cerrar sesión</button></div><p id='pf-msg' role='status' style='margin:0;color:var(--muted);font-size:.9rem'></p></div></div>"}
+async function uploadAvatar(f){var m=document.getElementById("pf-msg");m.textContent="Subiendo foto…";
+try{var bmp=await createImageBitmap(f),sz=Math.min(bmp.width,bmp.height),c=document.createElement("canvas");c.width=c.height=320;
+c.getContext("2d").drawImage(bmp,(bmp.width-sz)/2,(bmp.height-sz)/2,sz,sz,0,0,320,320);
+var blob=await new Promise(function(r){c.toBlob(r,"image/jpeg",.85)}),path=user.id+"/avatar.jpg";
+var up=await sb.storage.from("avatars").upload(path,blob,{upsert:true,contentType:"image/jpeg"});if(up.error)throw up.error;
+var pr=await sb.from("profiles").update({avatar_path:path}).eq("id",user.id);if(pr.error)throw pr.error;
+await loadProfile();renderProfile();document.getElementById("pf-msg").textContent="Foto actualizada."}
+catch(err){m.textContent="No se pudo subir la foto: "+(err.message||err)}}
+async function saveProfile(){var m=document.getElementById("pf-msg"),n=document.getElementById("pf-n").value.trim().replace(/\s+/g," "),y=parseInt(document.getElementById("pf-y").value,10);
+if(n.split(" ").length<2){m.textContent="Escribe tu nombre y apellidos.";return}
+if(!(y>=1900&&y<=new Date().getFullYear())){m.textContent="Introduce un año de nacimiento válido.";return}
+var r=await sb.from("profiles").update({full_name:n,birth_year:y}).eq("id",user.id);
+if(r.error){m.textContent="No se pudo guardar: "+r.error.message;return}
+await loadProfile();renderProfile();document.getElementById("pf-msg").textContent="Perfil guardado."}
+async function signOut(){await sb.auth.signOut();location.hash="#inicio";refresh()}
+document.getElementById("pf").addEventListener("change",function(e){if(e.target.id==="pf-file"&&e.target.files[0])uploadAvatar(e.target.files[0])});
+document.getElementById("pf").addEventListener("click",function(e){var id=e.target.id;if(id==="pf-save")saveProfile();else if(id==="pf-out")signOut();else if(id==="pf-login")document.getElementById("login-btn").click()});
 document.querySelectorAll(".rbtn").forEach(function(b){b.addEventListener("click",function(){document.querySelectorAll(".rbtn").forEach(function(x){x.setAttribute("aria-selected","false")});b.setAttribute("aria-selected","true");cur=b.dataset.r;editing=false;msg("");renderRules()})});
 document.getElementById("rbar").addEventListener("click",function(e){var id=e.target.id;
-if(id==="b-edit"){draft=rules[cur].map(function(r){return [r[0],r[1]]});editing=true;msg("");renderRules()}
-else if(id==="b-add"){draft.push(["",""]);renderRules()}
+if(id==="b-edit"){draft=docs[cur];editing=true;msg("");renderRules()}
 else if(id==="b-cancel"){editing=false;msg("");renderRules()}
-else if(id==="b-save"){save()}});
-document.getElementById("rules").addEventListener("input",function(e){var t=e.target;if(t.dataset.i!==undefined){draft[+t.dataset.i][+t.dataset.f]=t.value}});
-document.getElementById("rules").addEventListener("click",function(e){var d=e.target.dataset.del;if(d!==undefined){draft.splice(+d,1);renderRules()}});
+else if(id==="b-save"){save()}
+else if(id==="b-print"){window.print()}});
+document.getElementById("rules").addEventListener("input",function(e){if(e.target.id==="dedit"){draft=e.target.value;document.getElementById("dprev").innerHTML=parseDoc(draft)}});
 renderRules();
 if(sb){
 var lb=document.getElementById("login-btn"),dlg=document.getElementById("dlg");lb.hidden=false;
@@ -322,11 +359,11 @@ else{setVerify(em)}
 if(r2.error){if(/not confirmed/i.test(r2.error.message||"")){await sb.auth.resend({type:"signup",email:em});setVerify(em)}else{er.textContent="Correo o contraseña incorrectos."}}else{dlg.close();document.getElementById("lp").value="";refresh()}}});
 loadRules();refresh();
 }
-var views=["inicio","calendario","clasificacion","reglamento","inscripcion","privacidad"];
+var views=["inicio","calendario","clasificacion","reglamento","inscripcion","privacidad","perfil"];
 function route(){var h=(location.hash||"").replace("#","");if(views.indexOf(h)<0)h="inicio";
 views.forEach(function(v){document.getElementById("v-"+v).classList.toggle("on",v===h)});
 document.querySelectorAll("nav ul a").forEach(function(a){a.classList.toggle("on",a.dataset.v===h)});
-window.scrollTo(0,0)}
+if(h==="perfil")renderProfile();window.scrollTo(0,0)}
 window.addEventListener("hashchange",route);route();
 var target=new Date("2027-03-06T18:00:00+01:00").getTime();
 function tick(){var t=Math.max(0,target-Date.now());var v={d:Math.floor(t/864e5),h:Math.floor(t%864e5/36e5),m:Math.floor(t%36e5/6e4),s:Math.floor(t%6e4/1e3)};for(var k in v){document.getElementById(k).textContent=String(v[k]).padStart(2,"0")}}
