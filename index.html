@@ -561,7 +561,7 @@ if(ref==="logo")ed.logo=r.url;else{var p=ref.split(":");ed[p[0]][+p[1]].img=r.ur
 renderEditor();tmsg("Imagen subida. Pulsa el botón de guardar para conservar los cambios.")});
 renderTeams();loadTeams();
 /* ===== PRUEBAS: ficha de cada prueba del calendario (cartel, sesiones, documentos y lista oficial) ===== */
-var evLoaded=false,eed=null,eedNew=false,evTimer=null,curEv="",listEd=false;
+var evLoaded=false,eed=null,eedNew=false,evTimer=null,curEv="",listEd=false,lrows=null;
 function stopEv(){if(evTimer){clearInterval(evTimer);evTimer=null}}
 function rnd(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
 function fmtDate(d){return d?new Date(d+"T12:00:00").toLocaleDateString("es-ES",{weekday:"long",day:"numeric",month:"long"}):""}
@@ -616,21 +616,24 @@ tk();evTimer=setInterval(tk,1000)}
 function entriesTable(rows){
 return "<p class='hint'>"+rows.length+(rows.length===1?" inscrito":" inscritos")+"</p><div class='scroll dtb'><table style='min-width:480px'><thead><tr><th>Piloto</th><th>Vehículo (selección)</th><th>Dorsal</th><th>Sesión</th></tr></thead><tbody>"
 +rows.map(function(r){return "<tr><td>"+esc(r.n)+"</td><td>"+esc(r.v||r.t||"")+"</td><td>"+esc(r.d||"")+"</td><td>"+esc(r.s||"")+"</td></tr>"}).join("")+"</tbody></table></div>"}
-function listEditorHtml(rows){var t=rows.map(function(r){return [r.n,r.v||r.t||"",r.d||"",r.s||""].join(" ; ").replace(/[ ;]+$/,"")}).join("\n");
-return "<p class='hint'>Una línea por inscrito: <b>Piloto ; Vehículo (selección) ; Dorsal ; Sesión</b>. Los tres últimos son opcionales, pero si falta uno intermedio deja el hueco entre punto y coma (por ejemplo: <i>Nombre ; ; 12 ; Sesión 1</i>).</p><textarea id='ev-ta' rows='14' style='width:100%'>"+esc(t)+"</textarea><div class='tadm' style='margin:12px 0 0'><button class='btn' id='l-save' type='button'>Guardar lista</button><button class='btn line' id='l-cancel' type='button'>Cancelar</button></div><p id='l-msg' role='status' class='tempty' style='margin-top:8px'></p>"}
+function listEditorHtml(rows,e){var ss=(e.sessions||[]).map(function(x){return x.name}).filter(Boolean);
+return "<p class='hint'>Rellena una fila por inscrito. Solo el piloto es obligatorio.</p>"+rows.map(function(r,i){
+var cur=r.s||"",sel=ss.length?"<select data-lr='"+i+":s'><option value=''>—</option>"+ss.concat(cur&&ss.indexOf(cur)<0?[cur]:[]).map(function(n){return "<option"+(n===cur?" selected":"")+">"+esc(n)+"</option>"}).join("")+"</select>":"<input data-lr='"+i+":s' maxlength='80' value=\""+esc(cur)+"\">";
+return "<div class='erow'><div class='efields'><label style='flex:2 1 180px'>Piloto<input data-lr='"+i+":n' maxlength='80' value=\""+esc(r.n||"")+"\"></label><label>Vehículo (selección)<input data-lr='"+i+":v' maxlength='80' value=\""+esc(r.v||"")+"\"></label><label style='flex:0 1 90px'>Dorsal<input data-lr='"+i+":d' maxlength='10' value=\""+esc(r.d||"")+"\"></label><label>Sesión"+sel+"</label></div><button type='button' class='btn sm line' data-lrm='"+i+"'>Quitar</button></div>"}).join("")
++"<button type='button' class='btn sm' id='l-add'>+ Añadir piloto</button><div class='tadm' style='margin:14px 0 0'><button class='btn' id='l-save' type='button'>Guardar lista</button><button class='btn line' id='l-cancel' type='button'>Cancelar</button></div><p id='l-msg' role='status' class='tempty' style='margin-top:8px'></p>"}
 async function showEntries(e){var box=document.getElementById("ev-ent");if(!box)return;
 var r=await sb.from("event_entries").select("rows").eq("event_id",e.id).maybeSingle();
 box=document.getElementById("ev-ent");if(curEv!==e.id||!box)return;
 if(r.error){box.innerHTML="<p class='tempty'>No se pudo cargar la lista: "+esc(r.error.message)+"</p>";return}
 var rows=(r.data&&r.data.rows)||[];
-if(listEd&&roles.all){box.innerHTML=listEditorHtml(rows);return}
+if(listEd&&roles.all){if(!lrows)lrows=rows.map(function(r){return {n:r.n||"",v:r.v||r.t||"",d:r.d||"",s:r.s||""}});if(!lrows.length)lrows.push({});box.innerHTML=listEditorHtml(lrows,e);return}
 box.innerHTML=(rows.length?entriesTable(rows):"<p class='tempty'>La lista todavía está vacía.</p>")+(roles.all?"<div class='tadm' style='margin:14px 0 0'><button class='btn sm' id='l-edit' type='button'>Editar lista</button></div><p id='l-msg' role='status' class='tempty' style='margin-top:8px'></p>":"")}
-async function saveList(id){var ta=document.getElementById("ev-ta"),m=document.getElementById("l-msg");
-var rows=ta.value.split(/\r?\n/).map(function(l){var p=l.split(/\s*;\s*|\t/);return {n:(p[0]||"").trim().slice(0,80),v:(p[1]||"").trim().slice(0,80),d:(p[2]||"").trim().slice(0,10),s:(p[3]||"").trim().slice(0,80)}}).filter(function(r){return r.n}).slice(0,500);
+async function saveList(id){var m=document.getElementById("l-msg");
+var rows=(lrows||[]).map(function(r){return {n:(r.n||"").trim().slice(0,80),v:(r.v||"").trim().slice(0,80),d:(r.d||"").trim().slice(0,10),s:(r.s||"").trim().slice(0,80)}}).filter(function(r){return r.n}).slice(0,500);
 m.textContent="Guardando…";
 var r=await sb.from("event_entries").upsert({event_id:id,rows:rows,updated_at:new Date().toISOString(),updated_by:user.id});
 if(r.error){m.textContent="No se pudo guardar: "+r.error.message;return}
-listEd=false;var e=evs.filter(function(x){return x.id===id})[0];if(e)showEntries(e)}
+listEd=false;lrows=null;var e=evs.filter(function(x){return x.id===id})[0];if(e)showEntries(e)}
 /* --- editor de la prueba (solo administradores) --- */
 function evUp(ref,txt,acc){return "<label class='btn sm line eup'>"+txt+"<input type='file' data-eup='"+ref+"' accept='"+acc+"' hidden></label>"}
 function renderEvEditor(){
@@ -664,7 +667,7 @@ if(!r.data||!r.data.length){evmsg("No tienes permiso para modificar esta prueba.
 await loadEvents();eed=null;
 if(location.hash==="#prueba-"+id)renderEvent(id);else location.hash="#prueba-"+id}
 var evEl=document.getElementById("ev");
-evEl.addEventListener("input",function(e){if(!eed)return;var t=e.target,d=t.dataset;
+evEl.addEventListener("input",function(e){var t=e.target,d=t.dataset;if(d.lr!==undefined&&lrows){var q=d.lr.split(":");lrows[+q[0]][q[1]]=t.value;return}if(!eed)return;
 if(d.e)eed[d.e]=t.value;
 else if(d.s){var p=d.s.split(":");eed.sessions[+p[0]][p[1]]=t.value}
 else if(d.dn!==undefined)eed.docs[+d.dn].name=t.value
@@ -681,8 +684,10 @@ else if(id==="e-poster-rm"){eed.poster="";renderEvEditor()}
 else if(id==="e-lat-clear"){eed.lat="";renderEvEditor()}
 else if(d.eadd){eed[d.eadd].push(d.eadd==="docs"?{name:""}:{});renderEvEditor()}
 else if(d.erm){var p=d.erm.split(":");eed[p[0]].splice(+p[1],1);renderEvEditor()}
-else if(id==="l-edit"&&cur){listEd=true;showEntries(cur)}
-else if(id==="l-cancel"&&cur){listEd=false;showEntries(cur)}
+else if(id==="l-edit"&&cur){listEd=true;lrows=null;showEntries(cur)}
+else if(id==="l-cancel"&&cur){listEd=false;lrows=null;showEntries(cur)}
+else if(id==="l-add"&&cur&&lrows){lrows.push({});document.getElementById("ev-ent").innerHTML=listEditorHtml(lrows,cur);var ins=document.querySelectorAll("#ev-ent [data-lr$=':n']");if(ins.length)ins[ins.length-1].focus()}
+else if(d.lrm!==undefined&&cur&&lrows){lrows.splice(+d.lrm,1);if(!lrows.length)lrows.push({});document.getElementById("ev-ent").innerHTML=listEditorHtml(lrows,cur)}
 else if(id==="l-save")saveList(curEv)});
 evEl.addEventListener("change",async function(e){var t=e.target,ref=t.dataset.eup;if(!ref||!eed||!t.files[0])return;var f=t.files[0];
 evmsg("Subiendo…");if(ref!=="poster")return;var r=await evUpPoster(f);if(r.err){evmsg(r.err);return}
