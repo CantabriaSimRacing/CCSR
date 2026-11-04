@@ -613,11 +613,11 @@ function tk(){var t=Math.max(0,at-Date.now()),v={d:Math.floor(t/864e5),h:Math.fl
 document.querySelectorAll("#ev-cd [data-u]").forEach(function(x){x.textContent=String(v[x.dataset.u]).padStart(2,"0")});
 if(t<=0){stopEv();setTimeout(function(){if(curEv===e.id&&!eed&&!listEd)renderEvent(e.id)},1500)}}
 tk();evTimer=setInterval(tk,1000)}
-function entriesTable(rows){var hs=rows.some(function(r){return r.s}),ht=rows.some(function(r){return r.t});
-return "<p class='hint'>"+rows.length+(rows.length===1?" inscrito":" inscritos")+"</p><div class='scroll dtb'><table style='min-width:340px'><thead><tr><th>Nº</th><th>Piloto</th>"+(hs?"<th>Sesión</th>":"")+(ht?"<th>Equipo / coche</th>":"")+"</tr></thead><tbody>"
-+rows.map(function(r,i){return "<tr><td class='pos'>"+(i+1)+"</td><td>"+esc(r.n)+"</td>"+(hs?"<td>"+esc(r.s||"")+"</td>":"")+(ht?"<td>"+esc(r.t||"")+"</td>":"")+"</tr>"}).join("")+"</tbody></table></div>"}
-function listEditorHtml(rows){var t=rows.map(function(r){return [r.n,r.s||"",r.t||""].join(" ; ").replace(/[ ;]+$/,"")}).join("\n");
-return "<p class='hint'>Una línea por inscrito: <b>Piloto ; Sesión ; Equipo / coche</b> (la sesión y el equipo son opcionales).</p><textarea id='ev-ta' rows='14' style='width:100%'>"+esc(t)+"</textarea><div class='tadm' style='margin:12px 0 0'><button class='btn' id='l-save' type='button'>Guardar lista</button><button class='btn line' id='l-cancel' type='button'>Cancelar</button></div><p id='l-msg' role='status' class='tempty' style='margin-top:8px'></p>"}
+function entriesTable(rows){
+return "<p class='hint'>"+rows.length+(rows.length===1?" inscrito":" inscritos")+"</p><div class='scroll dtb'><table style='min-width:480px'><thead><tr><th>Piloto</th><th>Vehículo (selección)</th><th>Dorsal</th><th>Sesión</th></tr></thead><tbody>"
++rows.map(function(r){return "<tr><td>"+esc(r.n)+"</td><td>"+esc(r.v||r.t||"")+"</td><td>"+esc(r.d||"")+"</td><td>"+esc(r.s||"")+"</td></tr>"}).join("")+"</tbody></table></div>"}
+function listEditorHtml(rows){var t=rows.map(function(r){return [r.n,r.v||r.t||"",r.d||"",r.s||""].join(" ; ").replace(/[ ;]+$/,"")}).join("\n");
+return "<p class='hint'>Una línea por inscrito: <b>Piloto ; Vehículo (selección) ; Dorsal ; Sesión</b>. Los tres últimos son opcionales, pero si falta uno intermedio deja el hueco entre punto y coma (por ejemplo: <i>Nombre ; ; 12 ; Sesión 1</i>).</p><textarea id='ev-ta' rows='14' style='width:100%'>"+esc(t)+"</textarea><div class='tadm' style='margin:12px 0 0'><button class='btn' id='l-save' type='button'>Guardar lista</button><button class='btn line' id='l-cancel' type='button'>Cancelar</button></div><p id='l-msg' role='status' class='tempty' style='margin-top:8px'></p>"}
 async function showEntries(e){var box=document.getElementById("ev-ent");if(!box)return;
 var r=await sb.from("event_entries").select("rows").eq("event_id",e.id).maybeSingle();
 box=document.getElementById("ev-ent");if(curEv!==e.id||!box)return;
@@ -626,7 +626,7 @@ var rows=(r.data&&r.data.rows)||[];
 if(listEd&&roles.all){box.innerHTML=listEditorHtml(rows);return}
 box.innerHTML=(rows.length?entriesTable(rows):"<p class='tempty'>La lista todavía está vacía.</p>")+(roles.all?"<div class='tadm' style='margin:14px 0 0'><button class='btn sm' id='l-edit' type='button'>Editar lista</button></div><p id='l-msg' role='status' class='tempty' style='margin-top:8px'></p>":"")}
 async function saveList(id){var ta=document.getElementById("ev-ta"),m=document.getElementById("l-msg");
-var rows=ta.value.split(/\r?\n/).map(function(l){var p=l.split(/\s*;\s*|\t/);return {n:(p[0]||"").trim().slice(0,80),s:(p[1]||"").trim().slice(0,80),t:(p[2]||"").trim().slice(0,80)}}).filter(function(r){return r.n}).slice(0,500);
+var rows=ta.value.split(/\r?\n/).map(function(l){var p=l.split(/\s*;\s*|\t/);return {n:(p[0]||"").trim().slice(0,80),v:(p[1]||"").trim().slice(0,80),d:(p[2]||"").trim().slice(0,10),s:(p[3]||"").trim().slice(0,80)}}).filter(function(r){return r.n}).slice(0,500);
 m.textContent="Guardando…";
 var r=await sb.from("event_entries").upsert({event_id:id,rows:rows,updated_at:new Date().toISOString(),updated_by:user.id});
 if(r.error){m.textContent="No se pudo guardar: "+r.error.message;return}
