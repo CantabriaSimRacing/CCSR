@@ -591,7 +591,7 @@ if(!e){b.innerHTML="<p class='tempty' style='margin-top:32px'>Prueba no encontra
 var adm=!!roles.all;
 var ses=(e.sessions||[]).map(function(s){var when=[fmtDate(s.date),s.time?s.time+" h":""].filter(Boolean).join(" · ");
 return "<div class='round' style='grid-template-columns:1fr auto'><div><h3>"+esc(s.name)+"</h3><p>"+esc(when||"Fecha por anunciar")+"</p></div>"+(s.link&&/^https?:\/\//i.test(s.link)?"<a class='btn sm' href=\""+esc(s.link)+"\" target='_blank' rel='noopener'>Inscribirse</a>":"")+"</div>"}).join("");
-var dl=(e.docs||[]).filter(function(d){return d.path}).map(function(d){return "<a class='dlink' href=\""+esc(docUrl(d))+"\">📄 <span>"+esc(d.name||d.file||"Documento")+"</span></a>"}).join("");
+var dl=(e.docs||[]).filter(function(d){return d.url?/^https?:\/\//i.test(d.url):d.path}).map(function(d){return "<a class='dlink' href=\""+esc(d.url||docUrl(d))+"\" target='_blank' rel='noopener'>"+(d.url?"🔗":"📄")+" <span>"+esc(d.name||d.file||"Documento")+"</span></a>"}).join("");
 b.innerHTML="<div class='page-head' style='padding-top:20px'><span class='tag'>"+esc(e.kind)+"</span><h2 style='margin-top:10px'>"+esc(e.name)+"</h2>"+(e.date?"<p class='lead' style='margin:6px 0 0'>"+esc(fmtDate(e.date))+"</p>":"")
 +(adm?"<div class='tadm' style='margin:16px 0 0'><button class='btn sm' id='e-edit' type='button'>Editar prueba</button><button class='btn sm line' id='e-del' type='button'>Eliminar prueba</button></div><p id='ev-msg' role='status' class='tempty' style='margin-top:8px'></p>":"")+"</div>"
 +"<div class='tsec'><h3>Cartel oficial</h3>"+(e.poster?"<a href=\""+esc(e.poster)+"\" target='_blank' rel='noopener'><img class='poster' src=\""+esc(e.poster)+"\" alt=\"Cartel oficial: "+esc(e.name)+"\"></a>":"<p class='tempty'>Aún no se ha publicado el cartel.</p>")+"</div>"
@@ -634,30 +634,24 @@ listEd=false;var e=evs.filter(function(x){return x.id===id})[0];if(e)showEntries
 /* --- editor de la prueba (solo administradores) --- */
 function evUp(ref,txt,acc){return "<label class='btn sm line eup'>"+txt+"<input type='file' data-eup='"+ref+"' accept='"+acc+"' hidden></label>"}
 function renderEvEditor(){
-var DOCACC=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.txt,.csv,.png,.jpg,.jpeg,.webp";
 document.getElementById("ev").innerHTML="<div class='page-head' style='padding-top:20px'><h2>"+(eedNew?"Crear prueba":"Editar prueba")+"</h2></div>"
 +"<div class='tsec'><div class='erow'><div class='efields'><label>Nombre de la prueba<input data-e='name' maxlength='100' value=\""+esc(eed.name)+"\"></label><label>Tipo<select data-e='kind'>"+EKINDS.map(function(k){return "<option"+(k===eed.kind?" selected":"")+">"+k+"</option>"}).join("")+"</select></label><label>Fecha de la prueba<input type='date' data-e='date' value=\""+esc(eed.date)+"\"></label></div></div></div>"
 +"<div class='tsec'><h3>Cartel oficial</h3>"+(eed.poster?"<img class='epre' src=\""+esc(eed.poster)+"\" alt=\"\">":"")+"<div class='tadm' style='margin:0'>"+evUp("poster",eed.poster?"Cambiar cartel":"Subir cartel","image/jpeg,image/png,image/webp")+(eed.poster?"<button class='btn sm line' id='e-poster-rm' type='button'>Quitar cartel</button>":"")+"</div></div>"
 +"<div class='tsec'><h3>Sesiones para inscribirse</h3>"+eed.sessions.map(function(s,i){return "<div class='erow'><div class='efields'><label>Nombre de la sesión<input data-s='"+i+":name' maxlength='80' value=\""+esc(s.name||"")+"\"></label><label>Fecha<input type='date' data-s='"+i+":date' value=\""+esc(s.date||"")+"\"></label><label>Hora<input type='time' data-s='"+i+":time' value=\""+esc(s.time||"")+"\"></label><label>Enlace para inscribirse (opcional)<input type='url' placeholder='https://…' data-s='"+i+":link' value=\""+esc(s.link||"")+"\"></label></div><button type='button' class='btn sm line' data-erm='sessions:"+i+"'>Quitar</button></div>"}).join("")+"<button type='button' class='btn sm' data-eadd='sessions'>+ Añadir sesión</button></div>"
-+"<div class='tsec'><h3>Documentos</h3><p class='hint'>PDF, Word, Excel, PowerPoint, ZIP, TXT, CSV o imágenes. Máximo 10 MB por archivo.</p>"+eed.docs.map(function(d,i){return "<div class='erow'><div class='efields'><label>Nombre del documento<input data-dn='"+i+"' maxlength='100' value=\""+esc(d.name||"")+"\"></label><div style='align-self:end;display:grid;gap:6px'>"+(d.file?"<small class='dn'>📄 "+esc(d.file)+"</small>":"")+evUp("doc:"+i,d.path?"Cambiar archivo":"Subir archivo",DOCACC)+"</div></div><button type='button' class='btn sm line' data-erm='docs:"+i+"'>Quitar</button></div>"}).join("")+"<button type='button' class='btn sm' data-eadd='docs'>+ Añadir documento</button></div>"
++"<div class='tsec'><h3>Documentos</h3><p class='hint'>Pega el enlace de cada documento (Google Drive, Dropbox, OneDrive…). Comprueba que el enlace permita verlo a cualquiera.</p>"+eed.docs.map(function(d,i){return "<div class='erow'><div class='efields'><label>Nombre del documento<input data-dn='"+i+"' maxlength='100' value=\""+esc(d.name||"")+"\"></label><label>Enlace<input type='url' placeholder='https://…' data-du='"+i+"' value=\""+esc(d.url||"")+"\">"+(d.path&&!d.url?"<small class='dn'>Archivo subido antes: "+esc(d.file||d.path)+"</small>":"")+"</label></div><button type='button' class='btn sm line' data-erm='docs:"+i+"'>Quitar</button></div>"}).join("")+"<button type='button' class='btn sm' data-eadd='docs'>+ Añadir documento</button></div>"
 +"<div class='tsec'><h3>Lista de inscritos oficial</h3><div class='erow'><div class='efields'><label>Se publica el (fin de la cuenta atrás)<input type='datetime-local' data-e='lat' value=\""+esc(eed.lat||"")+"\"></label></div>"+(eed.lat?"<button type='button' class='btn sm line' id='e-lat-clear'>Quitar fecha</button>":"")+"</div><p class='hint'>Hasta esa fecha y hora, la lista solo la ven y modifican los administradores. La lista en sí se edita desde la ficha de la prueba.</p></div>"
 +"<div style='display:flex;gap:8px;flex-wrap:wrap'><button class='btn' id='e-save' type='button'>Guardar prueba</button><button class='btn line' id='e-cancel' type='button'>Cancelar</button></div><p id='ev-msg' role='status' class='tempty' style='margin-top:10px'></p>"}
 async function evUpPoster(f){var b=await shrink(f,1600);if(!b)return {err:"El cartel debe ser una imagen JPG, PNG o WebP."};
 var ext=b.type==="image/png"?"png":"webp",p="p/"+rnd()+"."+ext,r=await sb.storage.from("events").upload(p,b,{contentType:b.type});
 if(r.error)return {err:"No se pudo subir: "+r.error.message};
 return {url:sb.storage.from("events").getPublicUrl(p).data.publicUrl}}
-async function evUpDoc(f){if(f.size>10485760)return {err:"El archivo supera los 10 MB."};
-var safe=f.name.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-zA-Z0-9._-]+/g,"-").slice(-80),p="d/"+rnd()+"/"+safe,
-r=await sb.storage.from("events").upload(p,f,{contentType:f.type||"application/octet-stream"});
-if(r.error)return {err:"No se pudo subir: "+r.error.message};
-return {path:p}}
 async function saveEvent(){
 var n=eed.name.trim().replace(/\s+/g," ");if(!n){evmsg("Escribe el nombre de la prueba.");return}
 var lat=null;if(eed.lat){var dt=new Date(eed.lat);if(isNaN(dt.getTime())){evmsg("La fecha de publicación no es válida.");return}lat=dt.toISOString()}
 var fixLink=function(l){l=(l||"").trim();return l&&!/^https?:\/\//i.test(l)?"https://"+l:l};
 var row={name:n,kind:eed.kind,event_date:eed.date||null,poster:eed.poster||null,
 sessions:eed.sessions.filter(function(s){return (s.name||"").trim()}).map(function(s){return {name:s.name.trim(),date:s.date||"",time:s.time||"",link:fixLink(s.link)}}),
-docs:eed.docs.filter(function(d){return d.path}).map(function(d){return {name:(d.name||d.file||"Documento").trim(),path:d.path,file:d.file||""}}),
+docs:eed.docs.map(function(d){var u=fixLink(d.url),nm=(d.name||d.file||"Documento").trim();return u?{name:nm,url:u}:(d.path?{name:nm,path:d.path,file:d.file||""}:null)}).filter(Boolean),
 list_at:lat,updated_at:new Date().toISOString(),updated_by:user.id};
 var id=eed.id,r;evmsg("Guardando…");
 if(eedNew){var base=slug(n);if(base.length<2||base==="nueva")base="prueba-"+(base||"nueva");id=base;
@@ -673,7 +667,8 @@ var evEl=document.getElementById("ev");
 evEl.addEventListener("input",function(e){if(!eed)return;var t=e.target,d=t.dataset;
 if(d.e)eed[d.e]=t.value;
 else if(d.s){var p=d.s.split(":");eed.sessions[+p[0]][p[1]]=t.value}
-else if(d.dn!==undefined)eed.docs[+d.dn].name=t.value});
+else if(d.dn!==undefined)eed.docs[+d.dn].name=t.value
+else if(d.du!==undefined)eed.docs[+d.du].url=t.value});
 evEl.addEventListener("click",async function(e){var t=e.target.closest("button");if(!t)return;var d=t.dataset,id=t.id;
 var cur=evs.filter(function(x){return x.id===curEv})[0];
 if(id==="e-edit"&&cur){eed=clone(cur);eed.lat=toLocalInput(cur.listAt);eedNew=false;stopEv();renderEvEditor()}
@@ -690,9 +685,9 @@ else if(id==="l-edit"&&cur){listEd=true;showEntries(cur)}
 else if(id==="l-cancel"&&cur){listEd=false;showEntries(cur)}
 else if(id==="l-save")saveList(curEv)});
 evEl.addEventListener("change",async function(e){var t=e.target,ref=t.dataset.eup;if(!ref||!eed||!t.files[0])return;var f=t.files[0];
-evmsg("Subiendo…");var r=ref==="poster"?await evUpPoster(f):await evUpDoc(f);if(r.err){evmsg(r.err);return}
-if(ref==="poster")eed.poster=r.url;else{var i=+ref.split(":")[1];eed.docs[i].path=r.path;eed.docs[i].file=f.name;if(!(eed.docs[i].name||"").trim())eed.docs[i].name=f.name.replace(/\.[^.]+$/,"")}
-renderEvEditor();evmsg("Archivo subido. Pulsa «Guardar prueba» para conservar los cambios.")});
+evmsg("Subiendo…");if(ref!=="poster")return;var r=await evUpPoster(f);if(r.err){evmsg(r.err);return}
+eed.poster=r.url;
+renderEvEditor();evmsg("Cartel subido. Pulsa «Guardar prueba» para conservar los cambios.")});
 loadEvents();
 var views=["inicio","equipos","equipo","prueba","calendario","clasificacion","reglamento","inscripcion","privacidad","perfil","pilotos"];
 function route(){var h=(location.hash||"").replace("#",""),tid="";stopEv();if(h.indexOf("equipo-")===0){tid=h.slice(7);h="equipo"}else if(h.indexOf("prueba-")===0){tid=h.slice(7);h="prueba"}if(views.indexOf(h)<0)h="inicio";
