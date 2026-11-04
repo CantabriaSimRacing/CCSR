@@ -121,6 +121,9 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
 .nets{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
 .eform{max-width:none;margin-bottom:0}
 .tadm{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 20px}
+
+.pend{display:inline-block;background:#f5b400;color:#1a1300;font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;padding:3px 10px;border-radius:99px}
+.banner{flex-basis:100%;margin:0;padding:12px 16px;border-radius:8px;border:1px solid #f5b400;background:#f5b40018;font-size:.92rem}
 </style>
 </head>
 <body>
@@ -324,7 +327,7 @@ async function loadRules(){if(!sb)return;var r=await sb.from("rules").select("ch
 (r.data||[]).forEach(function(x){var c=x.content;if(docs[x.championship]!==undefined&&c&&!Array.isArray(c)&&typeof c.doc==="string"&&c.doc.trim()){docs[x.championship]=c.doc;if(x.updated_at)stamp[x.championship]=new Date(x.updated_at).toLocaleDateString("es-ES")}});renderRules()}
 async function refresh(){roles={};var s=await sb.auth.getSession();user=s.data.session?s.data.session.user:null;
 if(user){var r=await sb.from("managers").select("championship");(r.data||[]).forEach(function(x){roles[x.championship]=true})}
-await loadProfile();document.getElementById("nav-pilotos").hidden=!roles.all;document.getElementById("login-btn").hidden=!!user;editing=false;renderRules();renderProfile();if(location.hash==="#pilotos")renderPilots();if(typeof drawTeams==="function")drawTeams()}
+await loadProfile();document.getElementById("nav-pilotos").hidden=!roles.all;document.getElementById("login-btn").hidden=!!user;editing=false;renderRules();renderProfile();if(location.hash==="#pilotos")renderPilots();if(typeof loadTeams==="function")loadTeams()}
 async function save(){var r=await sb.from("rules").upsert({championship:cur,content:{doc:draft}});
 if(r.error){msg("No se pudo guardar: "+r.error.message);return}
 docs[cur]=draft;stamp[cur]=new Date().toLocaleDateString("es-ES");editing=false;msg("Reglamento guardado.");renderRules()}
@@ -419,7 +422,9 @@ else{setVerify(em)}
 if(r2.error){if(/not confirmed/i.test(r2.error.message||"")){await sb.auth.resend({type:"signup",email:em});setVerify(em)}else{er.textContent="Correo o contraseña incorrectos."}}else{dlg.close();document.getElementById("lp").value="";refresh()}}});
 loadRules();refresh();
 }
-/* ===== EQUIPOS (se guardan en Supabase; solo los administradores pueden crearlos, editarlos y borrarlos) ===== */
+/* ===== EQUIPOS (se guardan en Supabase) =====
+   Cualquier usuario con cuenta puede crear UN equipo; queda "pendiente" y solo lo ven su creador y los administradores
+   hasta que un administrador lo aprueba. Mientras está pendiente, el creador puede editarlo o borrarlo. */
 var teams=[],teamsLoaded=false,ed=null,edNew=false;
 var NETS=["Instagram","YouTube","Twitch","Discord","X","TikTok","Web"];
 var ED={trophies:[["t","Título"],["y","Año"],["p","Puesto"]],board:[["n","Nombre"],["r","Cargo"]],drivers:[["n","Nombre"]],sponsors:[["n","Nombre (texto alternativo)"]]};
@@ -428,20 +433,32 @@ function ini(n){var p=String(n).trim().split(/\s+/);return ((p[0]||"")[0]||"?").
 function clone(o){return JSON.parse(JSON.stringify(o))}
 function pic(cls,img,n,txt){return "<div class=\""+cls+"\">"+(img?"<img src=\""+esc(img)+"\" alt=\""+esc(n)+"\" loading=\"lazy\">":esc(txt))+"</div>"}
 function tmsg(t){var m=document.getElementById("t-msg");if(m)m.textContent=t||""}
+function mine(){return user?teams.filter(function(t){return t.owner===user.id})[0]:null}
+function canEditTeam(t){return !!(roles.all||(user&&t.owner===user.id&&t.status==="pending"))}
 async function loadTeams(){
 if(!sb){teamsLoaded=true;drawTeams();return}
-var r=await sb.from("teams").select("id,name,data,sort").order("sort").order("name");
+var r=await sb.from("teams").select("id,name,data,sort,status,owner").order("sort").order("name");
 teamsLoaded=true;
 if(r.error){teams=[];document.getElementById("tg").innerHTML="<p class='tempty'>No se pudieron cargar los equipos: "+esc(r.error.message)+"</p>";return}
-teams=(r.data||[]).map(function(x){var d=x.data||{};return {id:x.id,name:x.name,logo:d.logo||"",social:d.social||{},trophies:d.trophies||[],board:d.board||[],drivers:d.drivers||[],sponsors:d.sponsors||[]}});
+teams=(r.data||[]).map(function(x){var d=x.data||{};return {id:x.id,name:x.name,status:x.status,owner:x.owner,logo:d.logo||"",social:d.social||{},trophies:d.trophies||[],board:d.board||[],drivers:d.drivers||[],sponsors:d.sponsors||[]}});
 drawTeams()}
 function renderTeams(){
-document.getElementById("tadm").innerHTML=(sb&&roles.all)?"<a class='btn' href='#equipo-nuevo'>+ Crear equipo</a>":"";
+var bar="";
+if(sb){
+if(!user)bar="<button class='btn' id='t-login' type='button'>Accede para crear tu equipo</button>";
+else if(roles.all)bar="<a class='btn' href='#equipo-nuevo'>+ Crear equipo</a>";
+else if(teamsLoaded){var m=mine();bar=m?"<a class='btn line' href='#equipo-"+esc(m.id)+"'>Mi equipo</a>":"<a class='btn' href='#equipo-nuevo'>+ Crear mi equipo</a>"}
+if(roles.all&&teamsLoaded){var np=teams.filter(function(t){return t.status==="pending"}).length;if(np)bar+="<p class='banner'>"+np+(np===1?" equipo pendiente":" equipos pendientes")+" de aprobar. Ábrelos para revisarlos y aprobarlos.</p>"}}
+document.getElementById("tadm").innerHTML=bar;
 if(!teamsLoaded)return;
-document.getElementById("tg").innerHTML=teams.map(function(t){return "<a class='tcard' href='#equipo-"+esc(t.id)+"'>"+pic("tlogo",t.logo,"Logo de "+t.name,ini(t.name))+"<h3>"+esc(t.name)+"</h3></a>"}).join("")||"<p class='tempty'>Todavía no hay equipos.</p>"}
+document.getElementById("tg").innerHTML=teams.map(function(t){return "<a class='tcard' href='#equipo-"+esc(t.id)+"'>"+pic("tlogo",t.logo,"Logo de "+t.name,ini(t.name))+"<h3>"+esc(t.name)+"</h3>"+(t.status==="pending"?"<span class='pend'>Pendiente</span>":"")+"</a>"}).join("")||"<p class='tempty'>Todavía no hay equipos.</p>"}
 function drawTeams(){renderTeams();var h=location.hash;if(h.indexOf("#equipo-")===0&&!ed)renderTeamView(h.slice(8))}
-function renderTeamView(tid){ed=null;var b=document.getElementById("td");
-if(tid==="nuevo"){if(!roles.all){b.innerHTML="<div class='doc' style='margin-top:32px'><p class='dc'>Solo los administradores pueden crear equipos. Si eres administrador, accede con tu cuenta.</p></div>";return}
+function renderTeamView(tid){ed=null;var b=document.getElementById("td"),box=function(h){b.innerHTML="<div class='doc' style='margin-top:32px'>"+h+"</div>"};
+if(tid==="nuevo"){
+if(!sb||!user){box("<p class='dc'>Para crear un equipo necesitas una cuenta.</p><button class='btn' id='t-login' type='button'>Acceder o registrarme</button>");return}
+if(!teamsLoaded){b.innerHTML="<p class='tempty' style='margin-top:32px'>Cargando…</p>";return}
+var m=roles.all?null:mine();
+if(m){box("<p class='dc'>Ya has creado un equipo: <b>"+esc(m.name)+"</b>. <a href='#equipo-"+esc(m.id)+"' style='color:var(--accent);font-weight:700'>Ver mi equipo</a></p>");return}
 ed={id:"",name:"",logo:"",social:{},trophies:[],board:[],drivers:[],sponsors:[]};edNew=true;renderEditor();return}
 if(!teamsLoaded){b.innerHTML="<p class='tempty' style='margin-top:32px'>Cargando…</p>";return}
 renderTeam(tid)}
@@ -451,13 +468,15 @@ var soc=NETS.filter(function(n){return t.social[n]&&/^https?:\/\//i.test(t.socia
 var tro=(t.trophies||[]).map(function(x){return "<div class='tro'><span class='ic' aria-hidden='true'>🏆</span><b>"+esc(x.t)+"</b><small>"+esc([x.p,x.y].filter(Boolean).join(" · "))+"</small></div>"}).join("");
 var per=function(a,role){return (a||[]).map(function(x){return "<div class='tper'>"+pic("tph",x.img,x.n,ini(x.n))+"<b>"+esc(x.n)+"</b>"+(role&&x.r?"<small>"+esc(x.r)+"</small>":"")+"</div>"}).join("")};
 var sp=(t.sponsors||[]).filter(function(x){return x.img}).map(function(x){return "<div class='tsp'><img src=\""+esc(x.img)+"\" alt=\""+esc(x.n||"Patrocinador")+"\" loading=\"lazy\"></div>"}).join("");
-var adm=roles.all?"<div class='tadm' style='margin:18px 0 0'><button class='btn sm' id='t-edit' data-id=\""+esc(t.id)+"\" type='button'>Editar equipo</button><button class='btn sm line' id='t-del' data-id=\""+esc(t.id)+"\" type='button'>Eliminar equipo</button></div><p id='t-msg' role='status' class='tempty' style='margin-top:8px'></p>":"";
-b.innerHTML=adm+"<div class='thead'>"+pic("tlogo big",t.logo,"Logo de "+t.name,ini(t.name))+"<div><h2 style='margin:0'>"+esc(t.name)+"</h2>"+(soc?"<div class='soc'>"+soc+"</div>":"")+"</div></div>"
+var pend=t.status==="pending",bn="",adm="";
+if(pend)bn="<p class='banner' style='margin-top:18px'>"+(roles.all?"Equipo pendiente de aprobación. No lo ve nadie más hasta que lo apruebes.":"Tu equipo está pendiente de aprobación. Solo tú y los administradores lo veis hasta que lo aprueben. Mientras tanto puedes editarlo.")+"</p>";
+if(canEditTeam(t))adm="<div class='tadm' style='margin:18px 0 0'>"+(roles.all&&pend?"<button class='btn sm' id='t-ok' data-id=\""+esc(t.id)+"\" type='button'>Aprobar equipo</button>":"")+"<button class='btn sm"+(roles.all&&pend?" line":"")+"' id='t-edit' data-id=\""+esc(t.id)+"\" type='button'>Editar equipo</button><button class='btn sm line' id='t-del' data-id=\""+esc(t.id)+"\" type='button'>Eliminar equipo</button></div><p id='t-msg' role='status' class='tempty' style='margin-top:8px'></p>";
+b.innerHTML=bn+adm+"<div class='thead'>"+pic("tlogo big",t.logo,"Logo de "+t.name,ini(t.name))+"<div><h2 style='margin:0'>"+esc(t.name)+"</h2>"+(soc?"<div class='soc'>"+soc+"</div>":"")+"</div></div>"
 +"<div class='tsec'><h3>Vitrina de trofeos</h3>"+(tro?"<div class='vit'>"+tro+"</div>":"<p class='tempty'>Aún no hay trofeos.</p>")+"</div>"
 +"<div class='tsec'><h3>Junta directiva</h3>"+(t.board&&t.board.length?"<div class='pgrid'>"+per(t.board,true)+"</div>":"<p class='tempty'>Sin datos todavía.</p>")+"</div>"
 +"<div class='tsec'><h3>Pilotos</h3>"+(t.drivers&&t.drivers.length?"<div class='pgrid'>"+per(t.drivers,false)+"</div>":"<p class='tempty'>Sin pilotos todavía.</p>")+"</div>"
 +"<div class='tsec'><h3>Patrocinadores</h3>"+(sp?"<div class='spgrid'>"+sp+"</div>":"<p class='tempty'>Sin patrocinadores todavía.</p>")+"</div>"}
-/* --- editor (solo administradores) --- */
+/* --- editor --- */
 function upBtn(ref,has){return "<label class='btn sm line eup'>"+(has?"Cambiar":"Subir")+" imagen<input type='file' accept='image/jpeg,image/png,image/webp' data-up='"+ref+"' hidden></label>"}
 function edList(k,title,hasImg,sq){return "<div class='tsec'><h3>"+title+"</h3>"+ed[k].map(function(r,i){
 return "<div class='erow'>"+(hasImg?"<div class='eimgc'><div class='eimg"+(sq?" sq":"")+"'>"+(r.img?"<img src=\""+esc(r.img)+"\" alt=\"\">":esc(ini(r.n||"?")))+"</div>"+upBtn(k+":"+i,!!r.img)+"</div>":"")
@@ -466,44 +485,56 @@ return "<div class='erow'>"+(hasImg?"<div class='eimgc'><div class='eimg"+(sq?" 
 +"<button type='button' class='btn sm' data-add='"+k+"'>+ Añadir</button></div>"}
 function renderEditor(){
 document.getElementById("td").innerHTML="<div class='thead' style='padding-bottom:8px'><h2 style='margin:0'>"+(edNew?"Crear equipo":"Editar equipo")+"</h2></div>"
++(edNew&&!roles.all?"<p class='banner' style='margin-bottom:18px'>Tu equipo no se publicará hasta que un administrador lo apruebe. Puedes crear un solo equipo.</p>":"")
 +"<div class='tsec'><div class='erow'><div class='eimgc'><div class='eimg'>"+(ed.logo?"<img src=\""+esc(ed.logo)+"\" alt=\"\">":esc(ini(ed.name||"?")))+"</div>"+upBtn("logo",!!ed.logo)+"</div><div class='efields'><label>Nombre del equipo<input data-top='name' maxlength='80' value=\""+esc(ed.name)+"\"></label></div></div></div>"
 +"<div class='tsec'><h3>Redes</h3><p class='hint'>Deja en blanco las que no tenga.</p><div class='nets'>"+NETS.map(function(n){return "<label>"+n+"<input data-net='"+n+"' type='url' placeholder='https://…' value=\""+esc(ed.social[n]||"")+"\"></label>"}).join("")+"</div></div>"
 +edList("trophies","Vitrina de trofeos",false)+edList("board","Junta directiva",true)+edList("drivers","Pilotos",true)+edList("sponsors","Patrocinadores",true,true)
-+"<div style='display:flex;gap:8px;flex-wrap:wrap'><button class='btn' id='t-save' type='button'>Guardar equipo</button><button class='btn line' id='t-cancel' type='button'>Cancelar</button></div><p id='t-msg' role='status' class='tempty' style='margin-top:10px'></p>"}
++"<div style='display:flex;gap:8px;flex-wrap:wrap'><button class='btn' id='t-save' type='button'>"+(edNew&&!roles.all?"Enviar equipo":"Guardar equipo")+"</button><button class='btn line' id='t-cancel' type='button'>Cancelar</button></div><p id='t-msg' role='status' class='tempty' style='margin-top:10px'></p>"}
 async function shrink(f,max){return new Promise(function(res){
 if(!/^image\/(jpeg|png|webp)$/.test(f.type)){res(null);return}
 var im=new Image(),u=URL.createObjectURL(f);
 im.onload=function(){var k=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext("2d").drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);c.toBlob(function(b){res(b)},"image/webp",.88)};
 im.onerror=function(){URL.revokeObjectURL(u);res(null)};im.src=u})}
 async function upImg(f){var b=await shrink(f,640);if(!b)return {err:"Usa una imagen JPG, PNG o WebP."};
-var ext=b.type==="image/png"?"png":"webp",p="t/"+Date.now().toString(36)+Math.random().toString(36).slice(2,8)+"."+ext;
+var ext=b.type==="image/png"?"png":"webp",p=user.id+"/"+Date.now().toString(36)+Math.random().toString(36).slice(2,8)+"."+ext;
 var r=await sb.storage.from("teams").upload(p,b,{contentType:b.type});
 if(r.error)return {err:"No se pudo subir: "+r.error.message};
 return {url:sb.storage.from("teams").getPublicUrl(p).data.publicUrl}}
 async function saveTeam(){
 var n=ed.name.trim().replace(/\s+/g," ");if(!n){tmsg("Escribe el nombre del equipo.");return}
-var id=ed.id;
-if(!id){var base=slug(n);if(base.length<2||base==="nuevo")base="equipo-"+(base||"nuevo");id=base;var k=2;while(teams.some(function(x){return x.id===id})){id=base+"-"+(k++)}}
 var soc={};NETS.forEach(function(x){var v=(ed.social[x]||"").trim();if(v){if(!/^https?:\/\//i.test(v))v="https://"+v;soc[x]=v}});
 var data={logo:ed.logo||"",social:soc,
 trophies:ed.trophies.filter(function(x){return (x.t||"").trim()}),
 board:ed.board.filter(function(x){return (x.n||"").trim()}),
 drivers:ed.drivers.filter(function(x){return (x.n||"").trim()}),
 sponsors:ed.sponsors.filter(function(x){return x.img})};
-var row={id:id,name:n,data:data,updated_at:new Date().toISOString(),updated_by:user.id};
-if(edNew)row.sort=teams.length;
+var now=new Date().toISOString(),id=ed.id,r;
 tmsg("Guardando…");
-var r=await sb.from("teams").upsert(row);
+if(edNew){
+var base=slug(n);if(base.length<2||base==="nuevo")base="equipo-"+(base||"nuevo");id=base;
+for(var tries=0;tries<5;tries++){
+r=await sb.from("teams").insert({id:id,name:n,data:data,owner:user.id,status:roles.all?"approved":"pending",sort:teams.length,updated_at:now,updated_by:user.id});
+if(r.error&&r.error.code==="23505"){id=base+"-"+Math.random().toString(36).slice(2,5);continue}
+break}
+if(r.error){tmsg(/row-level security/i.test(r.error.message||"")?"No se pudo crear el equipo: ya tienes uno o no tienes permiso.":"No se pudo guardar: "+r.error.message);return}
+}else{
+r=await sb.from("teams").update({name:n,data:data,updated_at:now,updated_by:user.id}).eq("id",id).select("id");
 if(r.error){tmsg("No se pudo guardar: "+r.error.message);return}
+if(!r.data||!r.data.length){tmsg("No tienes permiso para modificar este equipo (puede que ya esté aprobado).");return}}
 ed=null;await loadTeams();
 if(location.hash==="#equipo-"+id)renderTeam(id);else location.hash="#equipo-"+id}
 var tdEl=document.getElementById("td");
 tdEl.addEventListener("input",function(e){if(!ed)return;var d=e.target.dataset;
 if(d.top==="name")ed.name=e.target.value;else if(d.net)ed.social[d.net]=e.target.value;else if(d.k)ed[d.k][+d.i][d.f]=e.target.value});
-tdEl.addEventListener("click",async function(e){var t=e.target.closest("button");if(!t)return;var d=t.dataset;
+function goLogin(e){if(e.target.id==="t-login")document.getElementById("login-btn").click()}
+document.getElementById("tadm").addEventListener("click",goLogin);
+tdEl.addEventListener("click",async function(e){goLogin(e);var t=e.target.closest("button");if(!t)return;var d=t.dataset;
 if(t.id==="t-edit"){var tm=teams.filter(function(x){return x.id===d.id})[0];if(tm){ed=clone(tm);edNew=false;renderEditor()}}
+else if(t.id==="t-ok"){var r0=await sb.from("teams").update({status:"approved",updated_at:new Date().toISOString(),updated_by:user.id}).eq("id",d.id).select("id");
+if(r0.error||!r0.data||!r0.data.length){tmsg("No se pudo aprobar"+(r0.error?": "+r0.error.message:"."));return}
+await loadTeams();renderTeam(d.id);tmsg("Equipo aprobado: ya lo ve todo el mundo.")}
 else if(t.id==="t-del"){var tm2=teams.filter(function(x){return x.id===d.id})[0];if(!tm2||!confirm("¿Eliminar el equipo «"+tm2.name+"»? Esta acción no se puede deshacer."))return;
-var r=await sb.from("teams").delete().eq("id",d.id);if(r.error){tmsg("No se pudo eliminar: "+r.error.message);return}
+var r=await sb.from("teams").delete().eq("id",d.id).select("id");if(r.error||!r.data||!r.data.length){tmsg("No se pudo eliminar"+(r.error?": "+r.error.message:"."));return}
 await loadTeams();location.hash="#equipos"}
 else if(d.add){ed[d.add].push({});renderEditor()}
 else if(d.rm){var p=d.rm.split(":");ed[p[0]].splice(+p[1],1);renderEditor()}
@@ -512,7 +543,7 @@ else if(t.id==="t-cancel"){var back=edNew?"":ed.id;ed=null;if(back)renderTeam(ba
 tdEl.addEventListener("change",async function(e){var ref=e.target.dataset.up;if(!ref||!ed||!e.target.files[0])return;
 tmsg("Subiendo imagen…");var r=await upImg(e.target.files[0]);if(r.err){tmsg(r.err);return}
 if(ref==="logo")ed.logo=r.url;else{var p=ref.split(":");ed[p[0]][+p[1]].img=r.url}
-renderEditor();tmsg("Imagen subida. Pulsa «Guardar equipo» para conservar los cambios.")});
+renderEditor();tmsg("Imagen subida. Pulsa el botón de guardar para conservar los cambios.")});
 renderTeams();loadTeams();
 var views=["inicio","equipos","equipo","calendario","clasificacion","reglamento","inscripcion","privacidad","perfil","pilotos"];
 function route(){var h=(location.hash||"").replace("#",""),tid="";if(h.indexOf("equipo-")===0){tid=h.slice(7);h="equipo"}if(views.indexOf(h)<0)h="inicio";
